@@ -5,19 +5,21 @@
 #include <random>
 #include <algorithm>
 
-class NameGenerator {
+class GermanNameGenerator {
 private:
     std::vector<std::string> malePrefixes;
     std::vector<std::string> maleSuffixes;
     std::vector<std::string> femalePrefixes;
     std::vector<std::string> femaleSuffixes;
+    std::vector<std::string> surnames;
     std::mt19937 rng;
 
     void initializeSyllables() {
-        malePrefixes = {"Al", "Ber", "Car", "Dan", "Ed", "Fred", "Gre", "Har"};
-        maleSuffixes = {"en", "on", "an", "ard", "in", "ley", "son", "ton"};
-        femalePrefixes = {"Am", "Bri", "Car", "Dan", "El", "Fion", "Gra", "Han"};
-        femaleSuffixes = {"a", "elle", "ina", "lyn", "ey", "ie", "anna", "beth"};
+        malePrefixes = {"Hein", "Frie", "Wolf", "Lud", "Ger", "Hans", "Die", "Karl"};
+        maleSuffixes = {"rich", "helm", "gang", "wig", "hard", "ter", "trich", "mann"};
+        femalePrefixes = {"An", "Mar", "Ger", "Hil", "Ing", "Eli", "Ur", "Chris"};
+        femaleSuffixes = {"na", "gret", "trud", "de", "rid", "sa", "sula", "tina"};
+        surnames = {"Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Hoffmann", "Schäfer"};
     }
 
     std::string generateSyllable(const std::vector<std::string>& syllables) {
@@ -26,7 +28,7 @@ private:
     }
 
 public:
-    NameGenerator() : rng(std::random_device{}()) {
+    GermanNameGenerator() : rng(std::random_device{}()) {
         initializeSyllables();
     }
 
@@ -39,16 +41,20 @@ public:
         return name;
     }
 
+    std::string generateSurname() {
+        return generateSyllable(surnames);
+    }
+
     void generateNames(bool isMale, int count, const std::string& filename) {
-        std::ofstream outFile(filename);
+        std::ofstream outFile(filename + ".txt");
         for (int i = 0; i < count; ++i) {
-            outFile << generateName(isMale) << std::endl;
+            outFile << generateName(isMale) << ":" << generateSurname() << std::endl;
         }
     }
 };
 
 int main() {
-    NameGenerator generator;
+    GermanNameGenerator generator;
     char gender;
     int count;
     std::string filename;
@@ -57,12 +63,12 @@ int main() {
     std::cin >> gender;
     std::cout << "Enter number of names to generate: ";
     std::cin >> count;
-    std::cout << "Enter output filename: ";
+    std::cout << "Enter output filename (without .txt extension): ";
     std::cin >> filename;
 
     bool isMale = (std::toupper(gender) == 'M');
     generator.generateNames(isMale, count, filename);
 
-    std::cout << "Names generated and saved to " << filename << std::endl;
+    std::cout << "German names generated and saved to " << filename << ".txt" << std::endl;
     return 0;
 }
