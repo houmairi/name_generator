@@ -3,72 +3,80 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <chrono>
 #include <algorithm>
 
-class GermanNameGenerator {
+class AustrianDataGenerator {
 private:
-    std::vector<std::string> malePrefixes;
-    std::vector<std::string> maleSuffixes;
-    std::vector<std::string> femalePrefixes;
-    std::vector<std::string> femaleSuffixes;
-    std::vector<std::string> surnames;
     std::mt19937 rng;
+    std::vector<std::string> firstNames = {"Anna", "Michael", "Lisa", "Markus", "Sarah", "Thomas", "Julia", "Andreas", "Maria", "Daniel"};
+    std::vector<std::string> lastNames = {"Müller", "Gruber", "Wagner", "Pichler", "Bauer", "Steiner", "Moser", "Mayer", "Hofer", "Leitner"};
 
-    void initializeSyllables() {
-        malePrefixes = {"Hein", "Frie", "Wolf", "Lud", "Ger", "Hans", "Die", "Karl"};
-        maleSuffixes = {"rich", "helm", "gang", "wig", "hard", "ter", "trich", "mann"};
-        femalePrefixes = {"An", "Mar", "Ger", "Hil", "Ing", "Eli", "Ur", "Chris"};
-        femaleSuffixes = {"na", "gret", "trud", "de", "rid", "sa", "sula", "tina"};
-        surnames = {"Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Hoffmann", "Schäfer"};
+    std::string generateName() {
+        std::uniform_int_distribution<> firstDist(0, firstNames.size() - 1);
+        std::uniform_int_distribution<> lastDist(0, lastNames.size() - 1);
+        return firstNames[firstDist(rng)] + " " + lastNames[lastDist(rng)];
     }
 
-    std::string generateSyllable(const std::vector<std::string>& syllables) {
-        std::uniform_int_distribution<> dist(0, syllables.size() - 1);
-        return syllables[dist(rng)];
+    std::string generateBirthDate() {
+        std::uniform_int_distribution<> yearDist(1950, 2003);
+        std::uniform_int_distribution<> monthDist(1, 12);
+        std::uniform_int_distribution<> dayDist(1, 28);  // Simplified, doesn't account for different month lengths
+        int year = yearDist(rng);
+        int month = monthDist(rng);
+        int day = dayDist(rng);
+        return std::to_string(day) + ":" + std::to_string(month) + ":" + std::to_string(year);
+    }
+
+    std::string generatePassword() {
+        const std::string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()";
+        std::uniform_int_distribution<> dist(0, chars.size() - 1);
+        std::string password;
+        for (int i = 0; i < 12; ++i) {
+            password += chars[dist(rng)];
+        }
+        return password;
+    }
+
+    std::string generateAustrianPhone() {
+        std::vector<std::string> prefixes = {"650", "660", "664", "676", "699", "680", "681"};
+        std::uniform_int_distribution<> prefix_dist(0, prefixes.size() - 1);
+        std::uniform_int_distribution<> number_dist(1000000, 9999999);
+        return prefixes[prefix_dist(rng)] + std::to_string(number_dist(rng));
     }
 
 public:
-    GermanNameGenerator() : rng(std::random_device{}()) {
-        initializeSyllables();
-    }
+    AustrianDataGenerator() : rng(std::chrono::steady_clock::now().time_since_epoch().count()) {}
 
-    std::string generateName(bool isMale) {
-        const auto& prefixes = isMale ? malePrefixes : femalePrefixes;
-        const auto& suffixes = isMale ? maleSuffixes : femaleSuffixes;
-        
-        std::string name = generateSyllable(prefixes) + generateSyllable(suffixes);
-        name[0] = std::toupper(name[0]);  // Capitalize the first letter
-        return name;
-    }
-
-    std::string generateSurname() {
-        return generateSyllable(surnames);
-    }
-
-    void generateNames(bool isMale, int count, const std::string& filename) {
+    void generateData(int count, const std::string& filename) {
         std::ofstream outFile(filename + ".txt");
         for (int i = 0; i < count; ++i) {
-            outFile << generateName(isMale) << ":" << generateSurname() << std::endl;
+            std::string name = generateName();
+            std::string birthDate = generateBirthDate();
+            std::string password = generatePassword();
+            std::string phone = generateAustrianPhone();
+
+            outFile << "Name: " << name << std::endl;
+            outFile << "Birth Date: " << birthDate << std::endl;
+            outFile << "Password: " << password << std::endl;
+            outFile << "Phone: " << phone << std::endl;
+            outFile << std::endl;
         }
     }
 };
 
 int main() {
-    GermanNameGenerator generator;
-    char gender;
+    AustrianDataGenerator generator;
     int count;
     std::string filename;
 
-    std::cout << "Enter gender (M/F): ";
-    std::cin >> gender;
-    std::cout << "Enter number of names to generate: ";
+    std::cout << "Enter number of records to generate: ";
     std::cin >> count;
     std::cout << "Enter output filename (without .txt extension): ";
     std::cin >> filename;
 
-    bool isMale = (std::toupper(gender) == 'M');
-    generator.generateNames(isMale, count, filename);
+    generator.generateData(count, filename);
 
-    std::cout << "German names generated and saved to " << filename << ".txt" << std::endl;
+    std::cout << "Data generated and saved to " << filename << ".txt" << std::endl;
     return 0;
 }
