@@ -46,12 +46,35 @@ private:
         return prefixes[prefix_dist(rng)] + std::to_string(number_dist(rng));
     }
 
-    std::string generateEmail(const std::string& name) {
+    std::string generateEmailPrefix(const std::string& name) {
         std::string email = name;
         std::transform(email.begin(), email.end(), email.begin(),
             [](unsigned char c) { return std::tolower(c); });
         std::replace(email.begin(), email.end(), ' ', '.');
-        email += "@example.com";
+        
+        // Add random variations
+        std::uniform_int_distribution<> varDist(0, 3);
+        std::uniform_int_distribution<> numDist(0, 999);
+        
+        switch(varDist(rng)) {
+            case 0: // Add a random number
+                email += std::to_string(numDist(rng));
+                break;
+            case 1: // Use only first name initial and last name
+                email = email[0] + email.substr(email.find('.') + 1);
+                break;
+            case 2: // Swap first and last name
+                {
+                    size_t dotPos = email.find('.');
+                    if (dotPos != std::string::npos) {
+                        email = email.substr(dotPos + 1) + "." + email.substr(0, dotPos);
+                    }
+                }
+                break;
+            default: // Leave as is
+                break;
+        }
+        
         return email;
     }
 
@@ -76,17 +99,17 @@ public:
         std::ofstream outFile(filename + ".csv");
         
         // Write CSV header
-        outFile << "Name,Email,BirthDate,Password,Phone\n";
+        outFile << "Name,EmailPrefix,BirthDate,Password,Phone\n";
 
         for (int i = 0; i < count; ++i) {
             std::string name = generateName();
-            std::string email = generateEmail(name);
+            std::string emailPrefix = generateEmailPrefix(name);
             std::string birthDate = generateBirthDate();
             std::string password = generatePassword();
             std::string phone = generateAustrianPhone();
 
             outFile << escapeCSV(name) << ","
-                    << escapeCSV(email) << ","
+                    << escapeCSV(emailPrefix) << ","
                     << escapeCSV(birthDate) << ","
                     << escapeCSV(password) << ","
                     << escapeCSV(phone) << "\n";
